@@ -1,0 +1,6 @@
+matplotlib
+tensorflow[and-cuda]
+tensorflow_datasets
+tensorflow_intel
+pandas
+numpy
