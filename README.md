@@ -11,7 +11,6 @@ O arquivo de código `main.py` contém todos os passos para realizar a construç
 - `criar_modelo()` — Função que define a arquitetura da rede neural.
 - `carregar_modelo()` — Função que carrega a arquitetura da rede neural salva em arquivo.
 - `treinar()` — Treina o modelo com o conjunto de dados e salva o modelo treinado.
-- `plot_history()` — Carrega um modelo salvo ou cria um novo se não existir.
 - `salvar_history()` — Salvar dados do histórico.
 - `carregar_history()` — Carregar dados do histórico.
 - `visualizar_history()` — Plot dados do histórico.
