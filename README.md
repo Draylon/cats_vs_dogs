@@ -16,6 +16,7 @@ O arquivo de código `main.py` contém todos os passos para realizar a construç
 - `carregar_history()` — Carregar dados do histórico.
 - `visualizar_history()` — Plot dados do histórico.
 - `test_image()` — Script para testar o modelo com uma imagem aleatória da base de validação.
+- `visualizar_modelo()` — Demonstrar o conteúdo inserido na primeira iteração da rede.
 
 ---
 
@@ -26,6 +27,7 @@ O arquivo de código `main.py` contém todos os passos para realizar a construç
 - Salvamento automático do modelo treinado
 - Reuso do modelo salvo sem necessidade de re-treinamento
 - Visualização de predições com imagens aleatórias
+- Visualização da primeira camada da rede
 
 ---
 

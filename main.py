@@ -2,7 +2,7 @@
 # Parâmetros:
 
 MODEL_PATH = "saved_model/"
-MODEL_NAME = "modelo1"
+MODEL_NAME = "50epoch_no_dropout"
 
 MODEL_DIR = f"{MODEL_PATH}{MODEL_NAME}.h5"
 IMG_SIZE = (128, 128)
@@ -24,14 +24,37 @@ import tensorflow_datasets as tfds
 # Começar a preparar os dados
 
 import tensorflow as tf
-from tensorflow.keras import layers, models
+from tensorflow.keras import layers, models, Model
 import matplotlib.pyplot as plt
+#import matplotlib as mpl
+#mpl.rcParams['font.family'] = ['DejaVu Sans','Noto Sans', 'Noto Sans Symbols2', 'DejaVu Sans', 'Arial', 'sans-serif','DejaVu Sans']
+
 import os
 import random
 import pickle
 import pandas as pd
 
 tf.config.run_functions_eagerly(True)
+
+import time
+import csv
+from tensorflow.keras.callbacks import Callback
+
+class TimeHistory(Callback):
+    def on_train_begin(self, logs=None):
+        self.epoch_times = []
+        self.train_start_time = time.time()
+
+    def on_epoch_begin(self, epoch, logs=None):
+        self.epoch_start = time.time()
+
+    def on_epoch_end(self, epoch, logs=None):
+        epoch_time = time.time() - self.epoch_start
+        self.epoch_times.append(epoch_time)
+
+    def on_train_end(self, logs=None):
+        total_time = time.time() - self.train_start_time
+        print(f"Treinamento completo em {total_time:.2f}s.")
 
 
 def preprocess_image(image, label): # redimensionando as imagens e normalizando os valores dos pixels
@@ -58,10 +81,14 @@ def criar_modelo():
         
         layers.Conv2D(32, (3, 3), activation='relu', input_shape=(*IMG_SIZE, 3)), # aplica 32 filtros de 3x3 na imagem 128x128x3
         layers.MaxPooling2D(2, 2), # 128x128 => 64x64
+        
+        layers.Dropout(0.25),
 
         layers.Conv2D(64, (3, 3), activation='relu'), # aplica 64 filtros de 3x3 na imagem 64x64
         layers.MaxPooling2D(2, 2), # 64x64 => 32x32
 
+        layers.Dropout(0.25),
+        
         layers.Conv2D(128, (3, 3), activation='relu'), # aplica 128 filtros de 3x3 na imagem 32x32
         layers.MaxPooling2D(2, 2), # 32x32 => 16x16
 
@@ -105,24 +132,32 @@ def treinar(model,epochs=5,path=MODEL_DIR):
     if model is None:
         print("❌ Não há modelo carregado")
         return
+    
+    time_callback = TimeHistory()
     history = model.fit(
         ds_train,
         validation_data=ds_val,
-        epochs=epochs
+        epochs=epochs,
+        callbacks=[time_callback]
     )
     print("✅ Treinamento concluído")
     model.save(path)
     print(f"✅ Modelo salvo em: {path}")
     
-    salvar_history(history)
+    salvar_history(history,time_callback)
     return history
 
 
-def salvar_history(history, path=f'{MODEL_PATH}{MODEL_NAME}.pkl'):
+def salvar_history(history,time_callback=None, path=f'{MODEL_PATH}{MODEL_NAME}.pkl'):
     os.makedirs(os.path.dirname(MODEL_PATH), exist_ok=True)
     with open(path, 'wb') as f:
         pickle.dump(history.history, f)
     print(f"✅ Histórico salvo em: {path}")
+    
+    if time_callback is not None:
+        df = pd.DataFrame()
+        df['epoch_time_seconds'] = time_callback.epoch_times
+        df.to_csv(f"{MODEL_PATH}{MODEL_NAME}.time.csv", index_label='epoch')
 
 def carregar_history(path=f'{MODEL_PATH}{MODEL_NAME}.pkl'):
     if not os.path.exists(path):
@@ -136,7 +171,7 @@ def carregar_history(path=f'{MODEL_PATH}{MODEL_NAME}.pkl'):
 def visualizar_history(history):
     if type(history) is not dict:
         history = history.history
-    df=pd.DataFrame(history.history)
+    df=pd.DataFrame(history)
     df.plot(y=['accuracy', 'val_accuracy'], title='Accuracy')
     df.plot(y=['loss', 'val_loss'], title='Loss')
     plt.show()
@@ -153,7 +188,6 @@ def _plot_history(history):
     plt.show()
 
 
-
 def test_image():
     idx = random.randint(0, len(val_list) - 1)
     img_batch, label_batch = val_list[idx]
@@ -166,13 +200,36 @@ def test_image():
     print("✅" if pred_label == label else "❌")
     
     plt.imshow(img)
-    plt.title("Imagem: " + ("Dog 🐶" if label == 1 else "Cat 🐱"))
+    plt.title("Imagem: " + ("Dog" if label == 1 else "Cat 🐱") + "\nPredição:" +("Dog" if pred_label == 1 else "Cat"))
     plt.axis('off')
     plt.show()
     
+
+
+
+def visualizar_modelo():
+    #img_batch, _ = next(iter(ds_val))
+    #img = img_batch[0:1]
+    img = random.choice(val_list)[0]
+    layer_outputs = [layer.output for layer in model.layers if 'conv2d' in layer.name]
+    activation_model = Model(model.inputs, layer_outputs)
     
+    activations = activation_model.predict(img)
     
+    first_layer_activation = activations[0]
+    n_filters = first_layer_activation.shape[-1]
     
+    fig, axes = plt.subplots(4, 8, figsize=(12, 6))
+    for i in range(n_filters):
+        ax = axes[i//8, i%8]
+        feature_map = first_layer_activation[0, :, :, i]
+        ax.imshow(feature_map, cmap='gray')
+        ax.axis('off')
+    
+    plt.suptitle('Feature Maps da primeira Conv2D')
+    plt.show()
+
+
 
 import sys
 if __name__ == "__main__":
