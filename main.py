@@ -141,7 +141,9 @@ def visualizar_history(history):
     df.plot(y=['loss', 'val_loss'], title='Loss')
     plt.show()
 
-def plot_history(history):
+
+# deprecated
+def _plot_history(history):
     plt.plot(history['accuracy'], label='train acc')
     plt.plot(history['val_accuracy'], label='val acc')
     plt.title("Training and Validation Accuracy")
@@ -161,6 +163,7 @@ def test_image():
     pred = model.predict(tf.expand_dims(img, axis=0))[0][0]
     pred_label = 1 if pred > 0.5 else 0
     print(f"Predição: {'Dog 🐶' if pred_label == 1 else 'Cat 🐱'} ({pred:.2f})")
+    print("✅" if pred_label == label else "❌")
     
     plt.imshow(img)
     plt.title("Imagem: " + ("Dog 🐶" if label == 1 else "Cat 🐱"))
@@ -170,12 +173,15 @@ def test_image():
     
     
     
-    
-""" if __name__ == "__main__":
-    model = carregar_modelo()
-    history = treinar(model, epochs=5)
-    history = carregar_history()
-    aferir(history)
-    test_image()
-    test_image()
-    test_image() """
+
+import sys
+if __name__ == "__main__":
+    if sys.flags.interactive:
+        print("Executando em um ambiente interativo")
+    else:
+        model = carregar_modelo()   
+        history = treinar(model, epochs=5)
+        visualizar_history(history)
+        test_image()
+        test_image()
+        test_image()

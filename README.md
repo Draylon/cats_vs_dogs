@@ -31,18 +31,27 @@ O arquivo de código `main.py` contém todos os passos para realizar a construç
 
 ## 🧠 Pré-requisitos
 
-> ⚙️ Adicione aqui instruções sobre instalação de pacotes, ativação de ambiente virtual e dependências como TensorFlow e matplotlib.
+> É recomendado o uso de um gerênciador de versão do python para este trabalho, como o [PyEnv](https://github.com/pyenv/pyenv).
+
+
+> ⚙️ A aplicação faz uso de bibliotecas não-presentes neste repositório.
+Para instalar estas, o projeto acompanha arquivo de requisitos `requirements.txt`.
+
+> Em caso de incompatibilidade com hardware, é possível alterar os requisitos de execução e diminuir tempo de instalação, removendo `[and-cuda]` presente no arquivo `requirements.txt` como tensorflow[and-cuda].
+
+Para realizar a instalação das dependências do projeto, execute: 
+
+```bash
+pip3 install -r requirements.txt
+```
+
+
 
 ---
 
 ## ▶️ Como Executar
 
 ```bash
-# 1. (Instale dependências e configure o ambiente)
-# 2. Treine o modelo (ou carregue um já salvo)
-python seu_script_de_treino.py
-
-# 3. Faça uma predição com imagem aleatória
-python predict_random_image.py
+python -i main.py
 
 ```
