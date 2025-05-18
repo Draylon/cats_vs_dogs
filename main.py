@@ -2,7 +2,7 @@
 # Parâmetros:
 
 MODEL_PATH = "saved_model/"
-MODEL_NAME = "50epoch_no_dropout"
+MODEL_NAME = "modelo"
 
 MODEL_DIR = f"{MODEL_PATH}{MODEL_NAME}.h5"
 IMG_SIZE = (128, 128)
@@ -203,7 +203,8 @@ def test_image():
     plt.title("Imagem: " + ("Dog" if label == 1 else "Cat 🐱") + "\nPredição:" +("Dog" if pred_label == 1 else "Cat"))
     plt.axis('off')
     plt.show()
-    
+
+
 
 
 
@@ -237,8 +238,5 @@ if __name__ == "__main__":
         print("Executando em um ambiente interativo")
     else:
         model = carregar_modelo()   
-        history = treinar(model, epochs=5)
+        history = treinar(model, epochs=50)
         visualizar_history(history)
-        test_image()
-        test_image()
-        test_image()

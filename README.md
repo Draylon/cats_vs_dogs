@@ -40,6 +40,8 @@ Para instalar estas, o projeto acompanha arquivo de requisitos `requirements.txt
 
 > Em caso de incompatibilidade com hardware, é possível alterar os requisitos de execução e diminuir tempo de instalação, removendo `[and-cuda]` presente no arquivo `requirements.txt` como tensorflow[and-cuda].
 
+> A aplicação possui alguns segmentos custosos de treino em algoritmos de aprendizado de máquina. [Neste repositório](https://1drv.ms/f/c/81eff739ca6e213e/ElzNFnvr2s5AnjhOt-kFQtEB_pqSiz2WTDTDxNtLHnkh8Q?e=nTF7D8) é possível encontrar os modelos pré-treinados.
+
 Para realizar a instalação das dependências do projeto, execute: 
 
 ```bash
@@ -52,7 +54,14 @@ pip3 install -r requirements.txt
 
 ## ▶️ Como Executar
 
+Executar o script em modo interativo apenas inicializa o TensorFlow.
 ```bash
 python -i main.py
+
+```
+
+Executar o script direto produz um modelo, treina e exibe métricas, usando 5 Epochs.
+```bash
+python main.py
 
 ```
