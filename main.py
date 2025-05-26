@@ -206,6 +206,21 @@ def test_image():
 
 
 
+def test_custom(img_path):
+    model = carregar_modelo()
+    img = tf.keras.preprocessing.image.load_img(img_path, target_size=IMG_SIZE)
+    img = tf.keras.preprocessing.image.img_to_array(img)
+    img = tf.expand_dims(img, axis=0) / 255.0
+    pred = model.predict(img)[0][0]
+    pred_label = 1 if pred > 0.5 else 0
+    print(f"Predição: {'Dog 🐶' if pred_label == 1 else 'Cat 🐱'} ({pred:.2f})")
+    
+    plt.imshow(img[0])
+    plt.title("Imagem: " + ("Dog" if pred_label == 1 else "Cat"))
+    plt.axis('off')
+    plt.show()
+
+
 
 
 def visualizar_modelo():
