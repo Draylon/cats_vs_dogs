@@ -79,24 +79,36 @@ print(device_lib.list_local_devices())
 def criar_modelo():
     model = models.Sequential([
         
-        layers.Conv2D(32, (3, 3), activation='relu', input_shape=(*IMG_SIZE, 3)), # aplica 32 filtros de 3x3 na imagem 128x128x3
-        layers.MaxPooling2D(2, 2), # 128x128 => 64x64
-        
+        # Primeira camada - dados de entrada
+        layers.Conv2D(32, (3, 3), activation='relu', input_shape=(*IMG_SIZE, 3)),
+        layers.BatchNormalization(),
+        layers.MaxPooling2D(2, 2),
         layers.Dropout(0.25),
 
-        layers.Conv2D(64, (3, 3), activation='relu'), # aplica 64 filtros de 3x3 na imagem 64x64
-        layers.MaxPooling2D(2, 2), # 64x64 => 32x32
-
-        layers.Dropout(0.25),
+        # Segunda camada - controle do crescimento de parâmetros
+        layers.Conv2D(64, (3, 3), activation='relu'),
+        layers.BatchNormalization(),
+        layers.MaxPooling2D(2, 2),
+        layers.Dropout(0.35),
         
-        layers.Conv2D(128, (3, 3), activation='relu'), # aplica 128 filtros de 3x3 na imagem 32x32
-        layers.MaxPooling2D(2, 2), # 32x32 => 16x16
-
-        layers.Flatten(), # Converte a imagem 16x16x128 para um vetor 32768
+        # Terceira camada - reduzindo complexidade
+        layers.Conv2D(96, (3, 3), activation='relu'),  # Reduzido de 128 para 96
+        layers.BatchNormalization(),
+        layers.MaxPooling2D(2, 2),
+        layers.Dropout(0.4),
         
-        layers.Dense(128, activation='relu'), # 128 neurônios vão processar o vetor
+        # Camada adicional para melhorar extração de features
+        layers.Conv2D(128, (3, 3), activation='relu'),
+        layers.BatchNormalization(),
         
-        layers.Dense(1, activation='sigmoid') # Saída binária (0 ou 1)
+        # layers.Flatten(),  # Flatten para converter a saída 2D em 1D
+        layers.GlobalAveragePooling2D(),  # Substitui Flatten
+        
+        # Camadas densas mais controladas
+        layers.Dropout(0.5),
+        layers.Dense(64, activation='relu'),  # Reduzido de 128 para 64
+        layers.Dropout(0.3),
+        layers.Dense(1, activation='sigmoid')
     ])
 
     model.compile(optimizer='adam',
@@ -188,6 +200,20 @@ def _plot_history(history):
     plt.show()
 
 
+def batch_test():
+    pred_c = 0
+    for i in range(50):
+        idx = random.randint(0, len(val_list) - 1)
+        img_batch, label_batch = val_list[idx]
+        img = img_batch[0].numpy()
+        label = label_batch[0].numpy()
+        
+        pred = model.predict(tf.expand_dims(img, axis=0))[0][0]
+        pred_label = 1 if pred > 0.5 else 0
+        if pred_label == label:
+            pred_c += 1
+    print(f"Predições corretas: {pred_c} de 50 ({pred_c / 50 * 100:.2f}%)")
+
 def test_image():
     idx = random.randint(0, len(val_list) - 1)
     img_batch, label_batch = val_list[idx]
@@ -252,6 +278,6 @@ if __name__ == "__main__":
     if sys.flags.interactive:
         print("Executando em um ambiente interativo")
     else:
-        model = carregar_modelo()   
-        history = treinar(model, epochs=50)
+        model = carregar_modelo()
+        history = treinar(model, epochs=10)
         visualizar_history(history)
