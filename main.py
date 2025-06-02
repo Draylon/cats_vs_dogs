@@ -281,3 +281,78 @@ if __name__ == "__main__":
         model = carregar_modelo()
         history = treinar(model, epochs=10)
         visualizar_history(history)
+
+
+
+
+
+
+import tensorflow as tf
+import numpy as np
+import matplotlib.pyplot as plt
+import cv2
+
+def gradcam_visualization(model, img, last_conv_layer_name, alpha=0.4):
+    """
+    Aplica Grad-CAM em uma imagem para um modelo de classificação binária.
+    
+    Parâmetros:
+    - model: modelo Keras treinado.
+    - img: imagem de entrada (array numpy, shape [H, W, 3], valores [0, 1]).
+    - last_conv_layer_name: nome da última camada convolucional do modelo.
+    - alpha: intensidade da sobreposição do heatmap.
+    
+    Exibe: imagem original com Grad-CAM sobreposto.
+    """
+    
+    # Prepara a imagem
+    img_array = np.expand_dims(img, axis=0)
+    
+    # Modelo intermediário: camada conv e saída
+    grad_model = tf.keras.models.Model(
+        [model.inputs], 
+        [model.get_layer(last_conv_layer_name).output, model.output]
+    )
+    
+    # Calcula gradientes
+    with tf.GradientTape() as tape:
+        conv_outputs, predictions = grad_model(img_array)
+        loss = predictions[:, 0]
+    
+    grads = tape.gradient(loss, conv_outputs)
+    pooled_grads = tf.reduce_mean(grads, axis=(0, 1, 2))
+    
+    conv_outputs = conv_outputs[0]
+    heatmap = conv_outputs @ pooled_grads[..., tf.newaxis]
+    heatmap = tf.squeeze(heatmap)
+    
+    # Normaliza o heatmap
+    heatmap = tf.maximum(heatmap, 0) / tf.math.reduce_max(heatmap)
+    heatmap = heatmap.numpy()
+    
+    # Redimensiona o heatmap
+    heatmap_resized = cv2.resize(heatmap, (img.shape[1], img.shape[0]))
+    heatmap_resized = np.uint8(255 * heatmap_resized)
+    heatmap_colored = cv2.applyColorMap(heatmap_resized, cv2.COLORMAP_JET)
+    
+    # Prepara imagem original
+    img_uint8 = np.uint8(255 * img)
+    
+    # Superimposição
+    superimposed_img = heatmap_colored * alpha + img_uint8
+    
+    # Plot
+    plt.figure(figsize=(8, 8))
+    plt.imshow(superimposed_img.astype('uint8'))
+    plt.axis('off')
+    plt.title('Grad-CAM Visualization')
+    plt.show()
+
+
+
+# Exemplo de uso após o treinamento do modelo
+for img, label in train.take(1):
+    sample_img = img[0].numpy()
+    break
+
+gradcam_visualization(model, sample_img, last_conv_layer_name='conv2d_2')
